@@ -19,10 +19,12 @@ class TaskApp extends StatelessWidget {
       title: 'Task Manager',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primarySwatch: Colors.indigo,
+        primarySwatch: Colors.blueGrey,
+        scaffoldBackgroundColor: Colors.white,
+        // Updated textTheme keys to new Material 3 naming conventions.
         textTheme: TextTheme(
-          titleLarge: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
-          bodyMedium: TextStyle(fontSize: 16.0),
+          titleLarge: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold, color: Colors.black87),
+          bodyMedium: TextStyle(fontSize: 16.0, color: Colors.black87),
         ),
       ),
       home: TaskListScreen(),
@@ -85,7 +87,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
     final task = tasks[index];
     return Card(
       margin: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      elevation: 4,
+      elevation: 3,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),
@@ -93,16 +95,17 @@ class _TaskListScreenState extends State<TaskListScreen> {
         leading: Checkbox(
           value: task.isCompleted,
           onChanged: (value) => toggleTask(index, value),
-          activeColor: Colors.indigo,
+          activeColor: Colors.blueGrey,
         ),
         title: Text(
           task.name,
           style: TextStyle(
+            color: task.isCompleted ? Colors.black45 : Colors.black87,
             decoration: task.isCompleted ? TextDecoration.lineThrough : null,
             fontWeight: FontWeight.w600,
           ),
         ),
-        subtitle: Text("Priority: ${task.priority}"),
+        subtitle: Text("Priority: ${task.priority}", style: TextStyle(color: Colors.black54)),
         trailing: IconButton(
           icon: Icon(Icons.delete, color: Colors.redAccent),
           onPressed: () => deleteTask(index),
@@ -119,7 +122,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [Colors.indigo, Colors.blueAccent],
+              colors: [Colors.blueGrey.shade900, Colors.blueGrey.shade700],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -129,7 +132,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Colors.white, Colors.blue[50]!],
+            colors: [Colors.white, Colors.blueGrey.shade50],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -145,7 +148,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.grey.withOpacity(0.2),
+                    color: Colors.black12,
                     blurRadius: 8,
                     offset: Offset(0, 2),
                   ),
@@ -156,14 +159,16 @@ class _TaskListScreenState extends State<TaskListScreen> {
                   Expanded(
                     child: TextField(
                       controller: taskController,
+                      style: TextStyle(color: Colors.black87),
                       decoration: InputDecoration(
                         hintText: 'Enter task name',
+                        hintStyle: TextStyle(color: Colors.black45),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8.0),
                           borderSide: BorderSide.none,
                         ),
                         filled: true,
-                        fillColor: Colors.grey[100],
+                        fillColor: Colors.blueGrey.shade50,
                         contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
                       ),
                     ),
@@ -172,11 +177,11 @@ class _TaskListScreenState extends State<TaskListScreen> {
                   DropdownButton<String>(
                     value: selectedPriority,
                     underline: Container(),
-                    icon: Icon(Icons.arrow_drop_down, color: Colors.indigo),
+                    icon: Icon(Icons.arrow_drop_down, color: Colors.blueGrey),
                     items: ['Low', 'Medium', 'High'].map((priority) {
                       return DropdownMenuItem(
                         value: priority,
-                        child: Text(priority, style: TextStyle(fontWeight: FontWeight.bold)),
+                        child: Text(priority, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87)),
                       );
                     }).toList(),
                     onChanged: (value) {
@@ -191,7 +196,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
                   ElevatedButton(
                     onPressed: addTask,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.indigo,
+                      backgroundColor: Colors.blueGrey,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8.0),
                       ),
@@ -221,10 +226,11 @@ class _TaskListScreenState extends State<TaskListScreen> {
   }
 }
 
-/// Custom scroll behavior for a smoother scroll effect.
+/// Custom scroll behavior for a smoother scroll effect using the new buildOverscrollIndicator.
 class BouncingScrollBehavior extends ScrollBehavior {
   @override
-  Widget buildViewportChrome(BuildContext context, Widget child, AxisDirection axisDirection) {
+  Widget buildOverscrollIndicator(BuildContext context, Widget child, ScrollableDetails details) {
+    // Returning child without any overscroll indicator.
     return child;
   }
 }
