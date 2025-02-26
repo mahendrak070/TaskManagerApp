@@ -4,12 +4,18 @@ void main() {
   runApp(TaskApp());
 }
 
-/// A simple data model for a task, including name, completion status, and priority.
+/// Updated Task model including an optional deadline.
 class Task {
   String name;
   bool isCompleted;
   String priority;
-  Task({required this.name, this.isCompleted = false, this.priority = 'Medium'});
+  DateTime? deadline;
+  Task({
+    required this.name,
+    this.isCompleted = false,
+    this.priority = 'Medium',
+    this.deadline,
+  });
 }
 
 class TaskApp extends StatelessWidget {
@@ -42,17 +48,23 @@ class _TaskListScreenState extends State<TaskListScreen> {
   List<Task> tasks = [];
   final TextEditingController taskController = TextEditingController();
   String selectedPriority = 'Medium';
+  DateTime? selectedDeadline;
 
-  /// Adds a new task with the selected priority.
+  /// Adds a new task with the selected priority and deadline.
   void addTask() {
     String taskName = taskController.text;
     if (taskName.isNotEmpty) {
       setState(() {
-        tasks.add(Task(name: taskName, priority: selectedPriority));
-        // Sort tasks so that high-priority tasks appear at the top
+        tasks.add(Task(
+          name: taskName,
+          priority: selectedPriority,
+          deadline: selectedDeadline,
+        ));
+        // Sort tasks so that high-priority tasks appear at the top.
         tasks.sort((a, b) => comparePriority(a.priority, b.priority));
       });
       taskController.clear();
+      selectedDeadline = null;
     }
   }
 
@@ -74,6 +86,37 @@ class _TaskListScreenState extends State<TaskListScreen> {
     setState(() {
       tasks.removeAt(index);
     });
+  }
+
+  /// Opens a date and time picker to set a deadline.
+  Future<void> _pickDeadline() async {
+    DateTime now = DateTime.now();
+    DateTime? date = await showDatePicker(
+      context: context,
+      initialDate: now,
+      firstDate: now,
+      lastDate: DateTime(2100),
+    );
+    if (date != null) {
+      TimeOfDay? time = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay.fromDateTime(now),
+      );
+      if (time != null) {
+        final DateTime deadline = DateTime(date.year, date.month, date.day, time.hour, time.minute);
+        setState(() {
+          selectedDeadline = deadline;
+        });
+      }
+    }
+  }
+
+  /// Formats the deadline date and time.
+  String _formatDeadline(DateTime dt) {
+    final hour = dt.hour % 12 == 0 ? 12 : dt.hour % 12;
+    final minute = dt.minute.toString().padLeft(2, '0');
+    final period = dt.hour >= 12 ? "PM" : "AM";
+    return "${dt.month}/${dt.day}/${dt.year} $hour:$minute $period";
   }
 
   @override
@@ -105,7 +148,14 @@ class _TaskListScreenState extends State<TaskListScreen> {
             fontWeight: FontWeight.w600,
           ),
         ),
-        subtitle: Text("Priority: ${task.priority}", style: TextStyle(color: Colors.black54)),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("Priority: ${task.priority}", style: TextStyle(color: Colors.black54)),
+            if (task.deadline != null)
+              Text("Deadline: ${_formatDeadline(task.deadline!)}", style: TextStyle(color: Colors.black54)),
+          ],
+        ),
         trailing: IconButton(
           icon: Icon(Icons.delete, color: Colors.redAccent),
           onPressed: () => deleteTask(index),
@@ -207,6 +257,25 @@ class _TaskListScreenState extends State<TaskListScreen> {
                 ],
               ),
             ),
+            SizedBox(height: 12.0),
+            // Deadline selection row.
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    selectedDeadline != null
+                        ? "Deadline: ${_formatDeadline(selectedDeadline!)}"
+                        : "No deadline selected",
+                    style: TextStyle(fontSize: 16, color: Colors.black87),
+                  ),
+                ),
+                TextButton.icon(
+                  onPressed: _pickDeadline,
+                  icon: Icon(Icons.calendar_today, color: Colors.blueGrey),
+                  label: Text("Pick Deadline", style: TextStyle(color: Colors.blueGrey)),
+                ),
+              ],
+            ),
             SizedBox(height: 20.0),
             // Expanded ListView with smooth scrolling behavior.
             Expanded(
@@ -230,7 +299,6 @@ class _TaskListScreenState extends State<TaskListScreen> {
 class BouncingScrollBehavior extends ScrollBehavior {
   @override
   Widget buildOverscrollIndicator(BuildContext context, Widget child, ScrollableDetails details) {
-    // Returning child without any overscroll indicator.
     return child;
   }
 }
