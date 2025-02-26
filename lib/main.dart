@@ -9,7 +9,6 @@ class Task {
   String name;
   bool isCompleted;
   String priority;
-
   Task({required this.name, this.isCompleted = false, this.priority = 'Medium'});
 }
 
@@ -18,6 +17,14 @@ class TaskApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Task Manager',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        primarySwatch: Colors.indigo,
+        textTheme: TextTheme(
+          titleLarge: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
+          bodyMedium: TextStyle(fontSize: 16.0),
+        ),
+      ),
       home: TaskListScreen(),
     );
   }
@@ -30,7 +37,6 @@ class TaskListScreen extends StatefulWidget {
 }
 
 class _TaskListScreenState extends State<TaskListScreen> {
-  // List to store tasks
   List<Task> tasks = [];
   final TextEditingController taskController = TextEditingController();
   String selectedPriority = 'Medium';
@@ -77,21 +83,30 @@ class _TaskListScreenState extends State<TaskListScreen> {
   /// Builds each task item in the list view.
   Widget buildTaskItem(BuildContext context, int index) {
     final task = tasks[index];
-    return ListTile(
-      leading: Checkbox(
-        value: task.isCompleted,
-        onChanged: (value) => toggleTask(index, value),
+    return Card(
+      margin: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
       ),
-      title: Text(
-        task.name,
-        style: TextStyle(
-          decoration: task.isCompleted ? TextDecoration.lineThrough : null,
+      child: ListTile(
+        leading: Checkbox(
+          value: task.isCompleted,
+          onChanged: (value) => toggleTask(index, value),
+          activeColor: Colors.indigo,
         ),
-      ),
-      subtitle: Text("Priority: ${task.priority}"),
-      trailing: IconButton(
-        icon: Icon(Icons.delete),
-        onPressed: () => deleteTask(index),
+        title: Text(
+          task.name,
+          style: TextStyle(
+            decoration: task.isCompleted ? TextDecoration.lineThrough : null,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        subtitle: Text("Priority: ${task.priority}"),
+        trailing: IconButton(
+          icon: Icon(Icons.delete, color: Colors.redAccent),
+          onPressed: () => deleteTask(index),
+        ),
       ),
     );
   }
@@ -101,58 +116,115 @@ class _TaskListScreenState extends State<TaskListScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Task Manager'),
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.indigo, Colors.blueAccent],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
       ),
-      body: Padding(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.white, Colors.blue[50]!],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
         padding: EdgeInsets.all(16.0),
         child: Column(
           children: [
-            // Row containing text input, priority selector, and Add button
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: taskController,
-                    decoration: InputDecoration(
-                      hintText: 'Enter task name',
+            // Input area with text field, priority selector, and Add button.
+            Container(
+              padding: EdgeInsets.all(8.0),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.2),
+                    blurRadius: 8,
+                    offset: Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: taskController,
+                      decoration: InputDecoration(
+                        hintText: 'Enter task name',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.0),
+                          borderSide: BorderSide.none,
+                        ),
+                        filled: true,
+                        fillColor: Colors.grey[100],
+                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                      ),
                     ),
                   ),
-                ),
-                SizedBox(width: 8.0),
-                // Dropdown for selecting task priority
-                DropdownButton<String>(
-                  value: selectedPriority,
-                  items: ['Low', 'Medium', 'High'].map((priority) {
-                    return DropdownMenuItem(
-                      value: priority,
-                      child: Text(priority),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    if (value != null) {
-                      setState(() {
-                        selectedPriority = value;
-                      });
-                    }
-                  },
-                ),
-                SizedBox(width: 8.0),
-                ElevatedButton(
-                  onPressed: addTask,
-                  child: Text('Add'),
-                ),
-              ],
+                  SizedBox(width: 8.0),
+                  DropdownButton<String>(
+                    value: selectedPriority,
+                    underline: Container(),
+                    icon: Icon(Icons.arrow_drop_down, color: Colors.indigo),
+                    items: ['Low', 'Medium', 'High'].map((priority) {
+                      return DropdownMenuItem(
+                        value: priority,
+                        child: Text(priority, style: TextStyle(fontWeight: FontWeight.bold)),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() {
+                          selectedPriority = value;
+                        });
+                      }
+                    },
+                  ),
+                  SizedBox(width: 8.0),
+                  ElevatedButton(
+                    onPressed: addTask,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.indigo,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8.0),
+                      ),
+                      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    ),
+                    child: Text('Add', style: TextStyle(fontSize: 16)),
+                  ),
+                ],
+              ),
             ),
             SizedBox(height: 20.0),
-            // Expanded ListView that displays all tasks
+            // Expanded ListView with smooth scrolling behavior.
             Expanded(
-              child: ListView.builder(
-                itemCount: tasks.length,
-                itemBuilder: buildTaskItem,
+              child: ScrollConfiguration(
+                behavior: BouncingScrollBehavior(),
+                child: ListView.builder(
+                  physics: BouncingScrollPhysics(),
+                  itemCount: tasks.length,
+                  itemBuilder: buildTaskItem,
+                ),
               ),
             ),
           ],
         ),
       ),
     );
+  }
+}
+
+/// Custom scroll behavior for a smoother scroll effect.
+class BouncingScrollBehavior extends ScrollBehavior {
+  @override
+  Widget buildViewportChrome(BuildContext context, Widget child, AxisDirection axisDirection) {
+    return child;
   }
 }
